@@ -6,39 +6,69 @@
           type="primary" 
           :plain="tool === 'text'" 
           @click="tool = 'text'"
+          size="large"
+          :icon="Document"
         >
-          文字
+          <span>文字</span>
         </el-button>
         <el-button 
           type="primary" 
           :plain="tool === 'line'" 
           @click="tool = 'line'"
+          size="large"
+          :icon="Brush"
         >
-          线条
+          <span>线条</span>
         </el-button>
         <el-button 
           type="danger" 
-          @click="clearCanvas"
+          @click="handleClearCanvas"
+          size="large"
+          :icon="Delete"
         >
-          清空
+          <span>清空</span>
         </el-button>
       </el-button-group>
-      <div class="color-picker">
-        <span>颜色：</span>
-        <input 
-          type="color" 
-          v-model="currentColor" 
-          @input="updateColor"
-        >
-      </div>
-      <div class="line-width">
-        <span>线宽：</span>
-        <el-slider 
-          v-model="lineWidth" 
-          :min="1" 
-          :max="10" 
-          :step="1"
-        />
+      
+      <div class="toolbar-controls">
+        <div class="control-group">
+          <el-tooltip content="选择颜色" placement="bottom">
+            <div class="color-picker">
+              <el-icon :size="20" class="control-label">ColorPicker</el-icon>
+              <input 
+                type="color" 
+                v-model="currentColor" 
+                @input="updateColor"
+                class="color-input"
+              >
+            </div>
+          </el-tooltip>
+        </div>
+        
+        <div class="control-group">
+          <el-tooltip content="调整线宽" placement="bottom">
+            <div class="line-width">
+              <el-icon :size="20" class="control-label">ZoomIn</el-icon>
+              <el-slider 
+                v-model="lineWidth" 
+                :min="1" 
+                :max="15" 
+                :step="1"
+                :show-input="false"
+                :show-tooltip="'always'"
+                class="line-width-slider"
+              />
+              <span class="line-width-value">{{ lineWidth }}px</span>
+            </div>
+          </el-tooltip>
+        </div>
+        
+        <div class="control-group tool-info">
+          <el-tag :type="tool === 'text' ? 'primary' : 'success'" size="small">
+            <el-icon :size="14">{{ tool === 'text' ? 'Document' : 'Brush' }}</el-icon>
+            {{ tool === 'text' ? '文字工具' : '线条工具' }}
+          </el-tag>
+        </div>
       </div>
     </div>
     
@@ -52,6 +82,7 @@
         @mouseup="handleMouseUp"
         @mouseleave="handleMouseUp"
         @click="handleCanvasClick"
+        :class="{ 'drawing-mode': tool === 'line' }"
       ></canvas>
       <div 
         v-if="tool === 'text' && showTextInput" 
@@ -68,6 +99,8 @@
           @keyup.enter="handleTextEnter"
           placeholder="输入文字..."
           size="small"
+          clearable
+          :prefix-icon="Document"
         />
       </div>
     </div>
@@ -77,6 +110,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import type { Blackboard, BlackboardItem } from '../types'
+import { Document, Brush, Delete, ColorPicker, ZoomIn } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
 
 const props = defineProps<{
   blackboard: Blackboard | undefined
@@ -313,9 +348,19 @@ const updateBlackboard = (items: BlackboardItem[]) => {
 }
 
 // 清空画布
-const clearCanvas = () => {
+const handleClearCanvas = async () => {
   if (!props.blackboard) return
-  updateBlackboard([])
+  
+  try {
+    await ElMessageBox.confirm('确定要清空画布吗？此操作不可恢复。', '警告', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    updateBlackboard([])
+  } catch {
+    // 取消清空操作
+  }
 }
 
 // 更新颜色
@@ -333,7 +378,8 @@ const updateColor = () => {
   display: flex;
   flex-direction: column;
   background-color: #f5f5f5;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .blackboard-container.dark-theme {
@@ -341,72 +387,205 @@ const updateColor = () => {
 }
 
 .toolbar {
-  padding: 10px;
+  padding: 15px 20px;
   background-color: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e4e7ed;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 20px;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .blackboard-container.dark-theme .toolbar {
   background-color: #2c2c2c;
   border-bottom: 1px solid #404040;
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.toolbar :deep(.el-button-group) {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar :deep(.el-button) {
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.toolbar :deep(.el-button:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.control-label {
+  color: #909399;
+  transition: color 0.3s ease;
+}
+
+.blackboard-container.dark-theme .control-label {
+  color: #c0c4cc;
 }
 
 .color-picker {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.color-picker input[type="color"] {
-  width: 30px;
-  height: 30px;
-  border: none;
-  border-radius: 4px;
+.color-input {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #dcdfe6;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  background: none;
+  outline: none;
+  padding: 2px;
+}
+
+.color-input:hover {
+  border-color: #409eff;
+  transform: scale(1.1);
+}
+
+.blackboard-container.dark-theme .color-input {
+  border-color: #505050;
+}
+
+.blackboard-container.dark-theme .color-input:hover {
+  border-color: #69b1ff;
 }
 
 .line-width {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 150px;
+  gap: 12px;
+  width: 200px;
+}
+
+.line-width-slider {
+  flex: 1;
+}
+
+.line-width-value {
+  min-width: 40px;
+  text-align: center;
+  font-weight: 500;
+  color: #409eff;
+  font-size: 14px;
+}
+
+.blackboard-container.dark-theme .line-width-value {
+  color: #69b1ff;
+}
+
+.tool-info {
+  margin-left: auto;
 }
 
 .canvas-wrapper {
   flex: 1;
   position: relative;
   overflow: auto;
-  background-color: #ffffff;
-  transition: background-color 0.3s;
+  background-color: #fafafa;
+  transition: background-color 0.3s ease;
+  background-image: 
+    linear-gradient(#e0e0e0 1px, transparent 1px),
+    linear-gradient(90deg, #e0e0e0 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .blackboard-container.dark-theme .canvas-wrapper {
-  background-color: #2c2c2c;
+  background-color: #1f1f1f;
+  background-image: 
+    linear-gradient(#333333 1px, transparent 1px),
+    linear-gradient(90deg, #333333 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 canvas {
   display: block;
   cursor: crosshair;
-  border: 1px solid #e0e0e0;
-  transition: border-color 0.3s;
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin: 20px;
+  border-radius: 8px;
+}
+
+canvas.drawing-mode {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23409eff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3C/svg%3E") 12 12, crosshair;
 }
 
 .blackboard-container.dark-theme canvas {
   border-color: #404040;
+  background-color: #2c2c2c;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .text-input-container {
   position: absolute;
-  z-index: 10;
-  min-width: 200px;
+  z-index: 100;
+  min-width: 250px;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  animation: slideIn 0.2s ease-out;
+}
+
+.blackboard-container.dark-theme .text-input-container {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .text-input-container :deep(.el-input__wrapper) {
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: none;
+  border-radius: 8px;
+  border: 2px solid #409eff;
+  transition: all 0.3s ease;
+}
+
+.text-input-container :deep(.el-input__wrapper:focus-within) {
+  border-color: #66b1ff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.blackboard-container.dark-theme .text-input-container :deep(.el-input__wrapper) {
+  border-color: #69b1ff;
+  background-color: #3a3a3a;
+}
+
+.blackboard-container.dark-theme .text-input-container :deep(.el-input__wrapper:focus-within) {
+  border-color: #8cc5ff;
+  box-shadow: 0 0 0 2px rgba(105, 177, 255, 0.2);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 </style>

@@ -2,18 +2,22 @@
   <div class="main-container" :class="{ 'dark-theme': theme === 'dark' }" ref="mainContainer">
     <header class="header">
       <div class="header-left">
-        <h1>FreeBoard</h1>
+        <h1 class="app-title">FreeBoard</h1>
       </div>
       <div class="header-right">
-        <el-button @click="toggleTheme" type="text">
-          {{ theme === 'light' ? '🌙 深色' : '☀️ 浅色' }}
+        <el-button @click="toggleTheme" type="text" size="large" round>
+          <el-icon :size="20">{{ theme === 'light' ? 'Moon' : 'Sunny' }}</el-icon>
+          <span>{{ theme === 'light' ? '深色' : '浅色' }}</span>
         </el-button>
-        <el-button @click="handleLogout" type="text">退出登录</el-button>
+        <el-button @click="handleLogout" type="text" size="large" round>
+          <el-icon :size="20">Logout</el-icon>
+          <span>退出登录</span>
+        </el-button>
       </div>
     </header>
     
     <div class="tabs-container">
-      <el-tabs v-model="activeTab" type="card" @tab-remove="handleTabRemove" @tab-click="handleTabClick">
+      <el-tabs v-model="activeTab" type="card" @tab-remove="handleTabRemove" @tab-click="handleTabClick" stretch>
         <el-tab-pane
           v-for="tab in tabs"
           :key="tab.id"
@@ -33,8 +37,9 @@
         :disabled="!canAddTab"
         type="primary"
         size="small"
+        circle
+        :icon="Plus"
       >
-        +
       </el-button>
     </div>
   </div>
@@ -47,6 +52,7 @@ import { useAppStore } from '../stores/app'
 import { CONFIG } from '../utils/config'
 import BlackboardComponent from '../components/BlackboardComponent.vue'
 import { ElMessage } from 'element-plus'
+import { Plus, Moon, Sunny, Logout } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -141,7 +147,8 @@ const handleLogout = () => {
   display: flex;
   flex-direction: column;
   background-color: #f5f7fa;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .main-container.dark-theme {
@@ -153,31 +160,43 @@ const handleLogout = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
-  height: 60px;
+  padding: 0 30px;
+  height: 64px;
   background-color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  z-index: 100;
 }
 
 .main-container.dark-theme .header {
   background-color: #2c2c2c;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
-.header h1 {
+.app-title {
   margin: 0;
-  font-size: 20px;
-  color: #303133;
+  font-size: 24px;
+  font-weight: 600;
+  color: #409eff;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
 }
 
-.main-container.dark-theme .header h1 {
-  color: #ffffff;
+.main-container.dark-theme .app-title {
+  color: #69b1ff;
 }
 
 .header-right {
   display: flex;
-  gap: 10px;
+  gap: 20px;
+}
+
+.header-right .el-button {
+  transition: all 0.2s ease;
+}
+
+.header-right .el-button:hover {
+  transform: translateY(-2px);
 }
 
 .tabs-container {
@@ -189,16 +208,22 @@ const handleLogout = () => {
 
 .add-tab-btn {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 14px;
+  right: 14px;
   z-index: 100;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.add-tab-btn:hover {
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 :deep(.el-tabs) {
@@ -212,29 +237,71 @@ const handleLogout = () => {
   overflow: hidden;
 }
 
+/* 标签页样式优化 */
+:deep(.el-tabs__header) {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
+}
+
 .main-container.dark-theme :deep(.el-tabs__header) {
   background-color: #2c2c2c;
   border-bottom: 1px solid #404040;
+}
+
+:deep(.el-tabs__nav-wrap::after) {
+  background-color: #e4e7ed;
+  transition: all 0.3s ease;
 }
 
 .main-container.dark-theme :deep(.el-tabs__nav-wrap::after) {
   background-color: #404040;
 }
 
+:deep(.el-tabs__item) {
+  color: #606266;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+:deep(.el-tabs__item:hover) {
+  color: #409eff;
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+:deep(.el-tabs__item.is-active) {
+  color: #409eff;
+  font-weight: 600;
+}
+
 .main-container.dark-theme :deep(.el-tabs__item) {
   color: #cccccc;
 }
 
-.main-container.dark-theme :deep(.el-tabs__item.is-active) {
-  color: #409eff;
+.main-container.dark-theme :deep(.el-tabs__item:hover) {
+  color: #69b1ff;
+  background-color: rgba(105, 177, 255, 0.1);
 }
 
-.main-container.dark-theme :deep(.el-tabs__item:hover) {
-  color: #409eff;
+.main-container.dark-theme :deep(.el-tabs__item.is-active) {
+  color: #69b1ff;
+}
+
+:deep(.el-tabs__active-bar) {
+  background-color: #409eff;
+  height: 3px;
+  transition: all 0.3s ease;
 }
 
 .main-container.dark-theme :deep(.el-tabs__active-bar) {
-  background-color: #409eff;
+  background-color: #69b1ff;
+}
+
+/* 卡片样式 */
+:deep(.el-card) {
+  background-color: #ffffff;
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
 }
 
 .main-container.dark-theme :deep(.el-card) {
