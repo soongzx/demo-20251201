@@ -1,9 +1,9 @@
-import edgeConfig from '@vercel/edge-config'
+import { get, has, getAll } from '@vercel/edge-config'
 
 export const edgeConfigService = {
   async get<T>(key: string): Promise<T | null> {
     try {
-      return await edgeConfig.get<T>(key)
+      return await get<T>(key)
     } catch (error) {
       console.error('Edge Config get error:', error)
       return null
@@ -12,7 +12,7 @@ export const edgeConfigService = {
 
   async has(key: string): Promise<boolean> {
     try {
-      return await edgeConfig.has(key)
+      return await has(key)
     } catch (error) {
       console.error('Edge Config has error:', error)
       return false
@@ -21,7 +21,7 @@ export const edgeConfigService = {
 
   async getAll(): Promise<Record<string, any> | null> {
     try {
-      return await edgeConfig.getAll()
+      return await getAll()
     } catch (error) {
       console.error('Edge Config getAll error:', error)
       return null
