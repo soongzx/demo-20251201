@@ -10,6 +10,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@vercel/edge-config": "^1.4.3",
     "@vercel/kv": "^3.0.0",
     "element-plus": "^2.11.9",
     "pinia": "^3.0.4",

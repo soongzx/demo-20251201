@@ -3,6 +3,9 @@
     <header class="header">
       <div class="header-left">
         <h1 class="app-title">FreeBoard</h1>
+        <div class="edge-config-greeting" v-if="greeting">
+          {{ greeting }}
+        </div>
       </div>
       <div class="header-right">
         <el-button @click="toggleTheme" type="text" size="large" round>
@@ -53,10 +56,12 @@ import { CONFIG } from '../utils/config'
 import BlackboardComponent from '../components/BlackboardComponent.vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Moon, Sunny, Logout } from '@element-plus/icons-vue'
+import { edgeConfigService } from '../services/edgeConfig'
 
 const router = useRouter()
 const appStore = useAppStore()
 const mainContainer = ref<HTMLElement | null>(null)
+const greeting = ref<string>('')
 
 const { 
   theme, 
@@ -96,8 +101,18 @@ watch(() => currentTabId, (newVal) => {
   }
 })
 
+// 获取Edge Config中的问候语
+const loadGreeting = async () => {
+  try {
+    greeting.value = await edgeConfigService.getGreeting()
+  } catch (error) {
+    console.error('Failed to load greeting from Edge Config:', error)
+  }
+}
+
 // 初始化应用
 onMounted(async () => {
+  await loadGreeting()
   await initialize()
   
   // 设置自动保存定时器
@@ -184,6 +199,36 @@ const handleLogout = () => {
 
 .main-container.dark-theme .app-title {
   color: #69b1ff;
+}
+
+.edge-config-greeting {
+  font-size: 14px;
+  color: #606266;
+  margin-left: 16px;
+  font-weight: 400;
+  background: linear-gradient(135deg, #409eff 0%, #69b1ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: greetingFadeIn 0.5s ease-in;
+}
+
+.main-container.dark-theme .edge-config-greeting {
+  background: linear-gradient(135deg, #69b1ff 0%, #91caff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes greetingFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header-right {
